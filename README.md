@@ -5,4 +5,4 @@
 
 A tour of Go
 
-[https://go.dev/tour](`https://go.dev/tour`)
+[https://go.dev/tour](https://go.dev/tour)

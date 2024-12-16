@@ -4,6 +4,7 @@ package main
 // NB: import(...) for importing more than one packages
 import (
 	"fmt"
+	"math"
 )
 
 // Const has to be declared by '=' not this':=', Can be local or global
@@ -46,6 +47,14 @@ func main() {
 			break
 		}
 	}
+	// string Iteration
+
+	myString := "Arafat"
+	for i, r := range myString {
+		fmt.Printf("%c : %v\n", myString[i], r)
+	}
+	// Alternative:
+	// for i := 0; i < len(myString); i++ {}
 
 	// like if in C but without the paranthesis
 	// also with hard syntax with curly braces like functions
@@ -59,7 +68,7 @@ func main() {
 	if Truth := sum % 5; Truth < 3 {
 	} else {
 	}
-	// unlike regular if 'Truth' variable will not be available
+	// unlike regular 'if', 'Truth' variable will not be available
 	// out of this scope like for loop 1st example
 
 	// like C switch but Go switch doesn't have paranthesis and
@@ -111,10 +120,10 @@ func main() {
 	// p := &v1
 
 	// 'p' holds address of 'v1' and can be accessed with '*'
-	fmt.Printf("Addr: %p Value: %v", p, *p)
+	fmt.Printf("Addr: %p Value: %v\n", p, *p)
 	// Changing value of '*p' will change value of 'v1' as they share same addrress
 	*p = 4
-	fmt.Printf("Addr: %p Value: %v Ref Value: %v", p, *p, v1)
+	fmt.Printf("Addr: %p Value: %v Ref Value: %v\n", p, *p, v1)
 
 	// To create struct object we can use 'var' or ':='
 	myObj := myStruct{name: "test", id: 69}
@@ -185,6 +194,37 @@ func main() {
 	if !ok {
 		fmt.Printf("key [00] doesn't exist in the map, elem: %v\n", elem)
 	}
+
+	///////////////////////////
+	// Methods and Interfaces//
+	///////////////////////////
+	mainStruct := myStruct{
+		name: "Safin",
+		id:   69,
+	}
+	// Passing as pointer
+	revStruct := CreateRevStruct(&mainStruct)
+	fmt.Printf("Main Addr: %p, Returned Addr: %p \n", &mainStruct, revStruct)
+
+	// Using Struct specified Method
+	conStruct := mainStruct.concate(revStruct)
+	fmt.Printf("Concatenated Struct: %v\n", conStruct)
+
+	// We can set interface type and assign corresponding struct to it
+	// This Type of variables can only access methods only defined in the interface
+	var Person1 myType = &myStruct{"Safin", 22}
+	var Person2 myType = &myStruct{"Safin", 25}
+
+	if Person1.insertUser() {
+		fmt.Printf("User Inserted: %v\n", Person1)
+		// can't access 'Person1.name' as it is not in interface
+	}
+	if Person2.insertUser() {
+		fmt.Printf("User Inserted: %v\n", Person2)
+	} else {
+		fmt.Printf("User Already Exists: %v\n", Person2)
+	}
+
 }
 
 // func FUNCTION_NAME (arg1 ARGTYPE, arg2 ARGTYPE) RETURNTYPE { }
@@ -207,4 +247,52 @@ func ToFloat(x int) (xf float32) { //  we have set 'xf' as return value
 type myStruct struct {
 	name string
 	id   uint32
+}
+
+// Taking Pointer as Arg and Returning struct as pointer
+func CreateRevStruct(V *myStruct) *myStruct {
+	revName := ""
+	for _, r := range V.name { // '_' used underscore to avoid 'Unused Variable' warning
+		revName = string(r) + revName
+	}
+
+	var revID uint32 = 0
+	n := V.id
+	for n != 0 {
+		digit := n % 10
+		revID = revID*10 + digit
+		n /= 10
+	}
+	funcStruct := myStruct{name: revName, id: revID}
+	fmt.Printf("Arg Addr: %p, Return Addr: %p\n", V, &funcStruct)
+	return &funcStruct
+}
+
+// Method can be defined for struct
+func (M *myStruct) concate(m *myStruct) myStruct {
+	fmt.Printf("Method Addr: %p\n", M)
+	Name := M.name + m.name
+	i := int(math.Log10(float64(m.id))) + 1
+	ID := M.id*uint32(math.Pow(10, float64(i))) + m.id
+	return myStruct{name: Name, id: ID}
+}
+
+// Skeleton of a Structure and objects of this types can only methods below
+type myType interface {
+	concate(*myStruct) myStruct
+	insertUser() bool
+}
+
+// Stores 'name' of myStruct Object
+var USER []string
+
+func (M *myStruct) insertUser() bool {
+	name := M.name
+	for _, s := range USER {
+		if s == name {
+			return false
+		}
+	}
+	USER = append(USER, name)
+	return true
 }

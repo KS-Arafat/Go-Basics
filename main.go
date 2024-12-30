@@ -5,6 +5,9 @@ package main
 import (
 	"fmt"
 	"math"
+	"math/rand"
+	"sync"
+	"time"
 )
 
 // Const has to be declared by '=' not this':=', Can be local or global
@@ -224,6 +227,62 @@ func main() {
 	} else {
 		fmt.Printf("User Already Exists: %v\n", Person2)
 	}
+
+	/////////////////
+	// Concurrency //
+	/////////////////
+
+	// GoRoutine is for spanwing lightweight thread
+	go printMessage("GoRoutine_01")
+	go printMessage("GoRoutine_02")
+	// 'printMessage' function with 'go' will execute in its own thread
+	// and will not block the runtime. Thus function below will print along with the go
+	printMessage("MainRoutine")
+	// downside is that the program will exit early before threads could finish
+
+	//  For this we have 'Wait Group' which can be used as counter for threads
+	var wg sync.WaitGroup
+	wg.Add(1) // Add number of threads acts as counter
+
+	go func() { // anon function
+		printMessage("GR")
+		wg.Done() //  decrement counter
+	}()
+
+	wg.Wait() // Waits until counter is 0
+
+	//// Channels ////
+	// This for communication between goroutines
+	ch := make(chan int) // only supports string, int, float, and struct
+
+	go Sleeperfunction(ch)
+
+	for {
+		msg, open := <-ch
+		if !open { // will execute if "close()" is called on this channel
+			break
+		}
+		fmt.Printf("\nFunction Slept for %v Seconds", msg)
+	}
+
+}
+
+// Waiting Function
+func printMessage(msg string) {
+	for i := 0; i < 3; i++ {
+		fmt.Printf("\n%v: %v ", i+1, msg)
+		time.Sleep(500 * time.Millisecond)
+	}
+}
+
+// Channel: Message Sender Function
+func Sleeperfunction(ch chan int) {
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+	sleepTime := time.Duration(r.Intn(5))
+	time.Sleep(sleepTime * time.Second)
+	ch <- int(sleepTime)
+	// 'close()' is used to close channel else deadlock will occur
+	close(ch) // sets channel open state to false
 
 }
 
